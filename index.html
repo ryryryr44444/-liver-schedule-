@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -412,8 +413,8 @@ function saveData(){
 }
 function uid(){ return Math.random().toString(36).slice(2,10); }
 
-// ---------- Cloud sync (jsonblob.com, no account required) ----------
-const JSONBLOB_BASE = 'https://jsonblob.com/api/jsonBlob/';
+// ---------- Cloud sync (kvdb.io, no account required) ----------
+const KVDB_BASE = 'https://kvdb.io/';
 let shareId = null;       // current shared blob id, or null = local-only mode
 let syncTimer = null;
 let syncInFlight = false;
@@ -463,13 +464,14 @@ async function initCloudSync(){
   } else {
     // try to create a new shared data store automatically
     showBanner('共有リンクを準備中...');
-    const newId = await createRemote(data);
+    let createErr = '';
+    const newId = await createRemote(data).catch(e=>{ createErr = e.message; return null; });
     if(newId){
       shareId = newId;
       setShareIdInUrl(newId);
       showBanner('✅ 共有リンクを作成しました。設定画面から「共有リンクをコピー」してメンバーに送ってください。', true);
     } else {
-      showBanner('⚠️ 共有機能に接続できませんでした。このブラウザのみのローカルモードで動作します。');
+      showBanner('⚠️ 共有機能に接続できませんでした。このブラウザのみのローカルモードで動作します。' + (createErr? ' ('+escapeHtml(createErr)+')':''));
     }
   }
   updateShareSettingsUI();
@@ -485,9 +487,11 @@ function saveLocalOnly(){
 
 async function fetchRemote(id){
   try{
-    const res = await fetch(JSONBLOB_BASE + id, {headers:{'Accept':'application/json'}});
+    const res = await fetch(KVDB_BASE + id + '/data');
     if(!res.ok) return null;
-    const json = await res.json();
+    const text = await res.text();
+    if(!text) return null;
+    const json = JSON.parse(text);
     if(!json.streamers || !json.schedules || !json.dayoffs) return null;
     if(!json.products){
       json.products = [
@@ -502,33 +506,32 @@ async function fetchRemote(id){
 }
 
 async function createRemote(initialData){
-  try{
-    const res = await fetch(JSONBLOB_BASE, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', 'Accept':'application/json'},
-      body: JSON.stringify(initialData)
-    });
-    if(!res.ok) return null;
-    let id = res.headers.get('Location');
-    if(id) id = id.split('/').pop();
-    if(!id){
-      // fallback: some browsers don't expose the Location header cross-origin
-      const json = await res.json().catch(()=>null);
-      if(json && json.id) id = json.id;
-    }
-    return id;
-  }catch(e){
-    return null;
-  }
+  // step 1: create a new anonymous bucket
+  const res = await fetch(KVDB_BASE, {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    body: 'email=anonymous@example.com'
+  });
+  if(!res.ok) throw new Error('bucket作成失敗 status='+res.status);
+  const bucketId = (await res.text()).trim();
+  if(!bucketId) throw new Error('bucket IDが空');
+  // step 2: store the initial data under the "data" key
+  const putRes = await fetch(KVDB_BASE + bucketId + '/data', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(initialData)
+  });
+  if(!putRes.ok) throw new Error('データ保存失敗 status='+putRes.status);
+  return bucketId;
 }
 
 async function syncToCloud(){
   if(!shareId || syncInFlight) return;
   syncInFlight = true;
   try{
-    await fetch(JSONBLOB_BASE + shareId, {
-      method: 'PUT',
-      headers: {'Content-Type':'application/json', 'Accept':'application/json'},
+    await fetch(KVDB_BASE + shareId + '/data', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify(data)
     });
   }catch(e){
