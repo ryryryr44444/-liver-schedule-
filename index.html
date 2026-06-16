@@ -372,19 +372,8 @@
     </div>
     <div class="card">
       <h2>みんなで共有</h2>
-      <p class="small-muted" id="shareStatus">読み込み中...</p>
-      <div class="row" style="margin-bottom:12px;">
-        <div class="field" style="flex:1; min-width:280px;">
-          <label>GitHubトークン（gistスコープ必須）</label>
-          <input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width:100%;">
-        </div>
-        <button class="btn" id="saveGithubToken" style="align-self:flex-end;">保存</button>
-      </div>
-      <p class="small-muted">
-        ① <a href="https://github.com/settings/tokens/new?scopes=gist&description=LiverScheduleApp" target="_blank" style="color:var(--primary);">こちら</a>をクリック → 「Generate token」を押してトークンをコピー<br>
-        ② 上の欄に貼り付けて「保存」<br>
-        ③ チームメンバー全員が同じトークンを入力（LINEなどで共有してください）
-      </p>
+      <p class="small-muted" id="shareStatus">接続中...</p>
+      <p class="small-muted">このアプリはクラウドで自動同期されます。リンクを送るだけで全員が同じスケジュールを見られます。</p>
       <div class="row" style="margin-top:10px;">
         <button class="btn" id="copyShareLink">共有リンクをコピー</button>
         <button class="btn secondary" id="syncNow">最新データに更新</button>
@@ -481,27 +470,10 @@ function saveData(){
 }
 function uid(){ return Math.random().toString(36).slice(2,10); }
 
-// ---------- Cloud sync via GitHub Gist ----------
-const GIST_API = 'https://api.github.com/gists';
-const GIST_FILENAME = 'schedule_data.json';
-let gistId = null;
-let githubToken = '';
+// ---------- Cloud sync via Firebase Realtime Database ----------
+const FIREBASE_URL = 'https://liver-schedule-default-rtdb.firebaseio.com/scheduleData.json';
 let syncTimer = null;
 let syncInFlight = false;
-
-function loadToken(){ return localStorage.getItem('liver_github_token') || ''; }
-function saveToken(t){ localStorage.setItem('liver_github_token', t); githubToken = t; }
-function loadGistId(){
-  const u = new URLSearchParams(window.location.search).get('gist');
-  return u || localStorage.getItem('liver_gist_id') || null;
-}
-function saveGistId(id){
-  gistId = id;
-  localStorage.setItem('liver_gist_id', id);
-  const url = new URL(window.location.href);
-  url.searchParams.set('gist', id);
-  window.history.replaceState({}, '', url.toString());
-}
 
 function showBanner(msg, ok){
   const el = document.getElementById('syncBanner');
@@ -513,63 +485,34 @@ function showBanner(msg, ok){
 function updateShareSettingsUI(){
   const status = document.getElementById('shareStatus');
   if(!status) return;
-  const tokenInput = document.getElementById('githubTokenInput');
-  if(tokenInput && githubToken) tokenInput.value = githubToken;
-  if(gistId && githubToken){
-    status.innerHTML = '✅ 共有モード動作中 — Gist ID: <code>' + escapeHtml(gistId) + '</code>';
-  } else if(gistId){
-    status.innerHTML = '📖 読み取り専用モード（書き込みにはGitHubトークンが必要です）';
-  } else {
-    status.textContent = '未設定 — 下のGitHubトークンを登録すると共有が使えます。';
-  }
+  status.innerHTML = '✅ クラウド同期中 — リンクを共有するだけで全員が使えます';
 }
 
 async function initCloudSync(){
-  githubToken = loadToken();
-  gistId = loadGistId();
-
-  if(gistId){
-    showBanner('共有データを読み込み中...');
-    const remote = await fetchRemote();
-    if(remote){
-      data = remote;
-      saveLocalOnly();
-      showBanner('✅ 共有データに接続しました。' + (githubToken ? '' : '（読み取り専用）'), true);
-    } else {
-      showBanner('⚠️ 共有データの読み込みに失敗しました。ローカルデータを表示しています。');
-      gistId = null;
-    }
-  } else if(githubToken){
-    showBanner('共有リンクを準備中...');
-    const newId = await createGist(data);
-    if(newId){
-      saveGistId(newId);
-      showBanner('✅ 共有リンクを作成しました！「共有リンクをコピー」してメンバーに送ってください。', true);
-    } else {
-      showBanner('⚠️ GitHubトークンでの接続に失敗しました。トークンを確認してください。');
-    }
+  showBanner('クラウドデータを読み込み中...');
+  const remote = await fetchRemote();
+  if(remote){
+    data = remote;
+    saveLocalOnly();
+    showBanner('✅ クラウドに接続しました。', true);
   } else {
-    showBanner('ℹ️ 設定からGitHubトークンを登録するとみんなで共有できます。（現在はローカルのみ）');
+    // First time or empty DB: push local data up
+    await syncToCloud();
+    showBanner('✅ クラウドに接続しました。', true);
   }
   updateShareSettingsUI();
   refreshAllViews();
-  if(gistId){ syncTimer = setInterval(pollRemote, 30000); }
+  syncTimer = setInterval(pollRemote, 30000);
 }
 
 function saveLocalOnly(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
 async function fetchRemote(){
-  if(!gistId) return null;
   try{
-    const headers = {'Accept':'application/vnd.github.v3+json'};
-    if(githubToken) headers['Authorization'] = 'token ' + githubToken;
-    const res = await fetch(GIST_API + '/' + gistId, {headers});
+    const res = await fetch(FIREBASE_URL);
     if(!res.ok) return null;
-    const gist = await res.json();
-    const file = gist.files[GIST_FILENAME];
-    if(!file || !file.content) return null;
-    const json = JSON.parse(file.content);
-    if(!json.schedules || !json.streamers) return null;
+    const json = await res.json();
+    if(!json || !json.schedules || !json.streamers) return null;
     if(!json.products) json.products = [
       {id:'p1',name:'ナノブルシェイキングボトル'},
       {id:'p2',name:'エンジェルルカ（韓国化粧品）'}
@@ -578,46 +521,21 @@ async function fetchRemote(){
   }catch(e){ return null; }
 }
 
-async function createGist(initialData){
-  try{
-    const res = await fetch(GIST_API, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'token ' + githubToken,
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.github.v3+json'
-      },
-      body: JSON.stringify({
-        description: 'ライバー配信スケジュール共有データ',
-        public: false,
-        files: {[GIST_FILENAME]: {content: JSON.stringify(initialData, null, 2)}}
-      })
-    });
-    if(!res.ok) return null;
-    const gist = await res.json();
-    return gist.id || null;
-  }catch(e){ return null; }
-}
-
 async function syncToCloud(){
-  if(!gistId || !githubToken || syncInFlight) return;
+  if(syncInFlight) return;
   syncInFlight = true;
   try{
-    await fetch(GIST_API + '/' + gistId, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': 'token ' + githubToken,
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.github.v3+json'
-      },
-      body: JSON.stringify({files:{[GIST_FILENAME]:{content: JSON.stringify(data, null, 2)}}})
+    await fetch(FIREBASE_URL, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
     });
   }catch(e){}
   finally{ syncInFlight = false; }
 }
 
 async function pollRemote(){
-  if(!gistId || syncInFlight) return;
+  if(syncInFlight) return;
   const remote = await fetchRemote();
   if(remote){ data = remote; saveLocalOnly(); refreshAllViews(); }
 }
@@ -630,43 +548,17 @@ function refreshAllViews(){
   if(!document.getElementById('view-settings').classList.contains('hidden')) renderSettings();
 }
 
-document.getElementById('saveGithubToken').addEventListener('click', async ()=>{
-  const token = document.getElementById('githubTokenInput').value.trim();
-  if(!token){ alert('トークンを入力してください'); return; }
-  saveToken(token);
-  if(!gistId){
-    showBanner('Gistを作成中...');
-    const newId = await createGist(data);
-    if(newId){
-      saveGistId(newId);
-      showBanner('✅ 共有機能が有効になりました！「共有リンクをコピー」してメンバーに送ってください。', true);
-      if(syncTimer) clearInterval(syncTimer);
-      syncTimer = setInterval(pollRemote, 30000);
-    } else {
-      showBanner('⚠️ GitHubトークンでの接続に失敗しました。scopes=gistを確認してください。');
-    }
-  } else {
-    showBanner('✅ GitHubトークンを保存しました。', true);
-    if(syncTimer) clearInterval(syncTimer);
-    syncTimer = setInterval(pollRemote, 30000);
-  }
-  updateShareSettingsUI();
-});
-
 document.getElementById('copyShareLink').addEventListener('click', async ()=>{
-  if(!gistId){ alert('まずGitHubトークンを登録して共有リンクを作成してください。'); return; }
-  const url = new URL(window.location.href);
-  url.searchParams.set('gist', gistId);
+  const url = window.location.origin + window.location.pathname;
   try{
-    await navigator.clipboard.writeText(url.toString());
-    alert('共有リンクをコピーしました:\n' + url.toString());
+    await navigator.clipboard.writeText(url);
+    alert('共有リンクをコピーしました！\n' + url + '\n\nこのリンクを送るだけでOKです。');
   }catch(e){
-    prompt('このリンクをコピーしてください:', url.toString());
+    prompt('このリンクをコピーしてください:', url);
   }
 });
 
 document.getElementById('syncNow').addEventListener('click', async ()=>{
-  if(!gistId){ alert('共有リンクが設定されていません。'); return; }
   await pollRemote();
   alert('最新データに更新しました。');
 });
