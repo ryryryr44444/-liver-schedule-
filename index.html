@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -6,169 +5,61 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ライバー配信スケジュール管理</title>
 <style>
-  :root {
-    --bg: #f5f6fa;
-    --card: #ffffff;
-    --primary: #6c5ce7;
-    --primary-light: #a29bfe;
-    --text: #2d3436;
-    --muted: #888;
-    --border: #e0e0e0;
-    --c1: #74b9ff;
-    --c2: #ff7675;
-    --c3: #55efc4;
-    --off: #ffeaa7;
-  }
-  * { box-sizing: border-box; }
-  body {
-    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding: 0;
-  }
-  header {
-    background: var(--primary);
-    color: #fff;
-    padding: 16px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  header h1 { font-size: 1.3em; margin: 0; }
-  nav {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  nav button {
-    background: rgba(255,255,255,0.15);
-    border: none;
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.95em;
-  }
-  nav button.active, nav button:hover {
-    background: #fff;
-    color: var(--primary);
-    font-weight: bold;
-  }
-  main {
-    max-width: 1100px;
-    margin: 20px auto;
-    padding: 0 16px 60px;
-  }
-  .card {
-    background: var(--card);
-    border-radius: 10px;
-    padding: 18px;
-    margin-bottom: 18px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  }
-  .card h2 { margin-top: 0; font-size: 1.1em; }
-  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  label { font-size: 0.85em; color: var(--muted); display: block; margin-bottom: 4px; }
-  input, select, textarea {
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 0.95em;
-    font-family: inherit;
-  }
-  .field { display: flex; flex-direction: column; }
-  button.btn {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    padding: 9px 18px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.95em;
-    height: 38px;
-    align-self: flex-end;
-  }
-  button.btn:hover { background: #5a4bd1; }
-  button.btn.secondary {
-    background: #dfe6e9;
-    color: var(--text);
-  }
-  button.btn.danger {
-    background: #ff7675;
-    color: #fff;
-    padding: 4px 10px;
-    height: auto;
-    font-size: 0.8em;
-  }
-  /* calendar */
-  .cal-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
-  }
-  .cal-header h3 { margin: 0; }
-  .cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-  }
-  .cal-cell {
-    min-height: 90px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px;
-    font-size: 0.78em;
-    background: #fafafa;
-    position: relative;
-  }
-  .cal-cell.empty { background: transparent; border: none; }
-  .cal-cell .date-num { font-weight: bold; margin-bottom: 3px; color: var(--muted); }
-  .cal-cell.today { border: 2px solid var(--primary); }
-  .event {
-    border-radius: 4px;
-    padding: 2px 4px;
-    margin-bottom: 2px;
-    color: #fff;
-    cursor: pointer;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .event.off { background: var(--off); color: #5a4500; }
-  .legend { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; font-size: 0.85em; }
-  .legend span.dot { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-  th, td { border: 1px solid var(--border); padding: 8px; text-align: left; }
-  th { background: #f0f1f8; }
-  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.78em; color: #fff; }
-  .tag.pending { background: #fdcb6e; color: #5a4500; }
-  .tag.approved { background: #55efc4; color: #00543a; }
-  .tag.rejected { background: #ff7675; }
-  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; }
-  .stat-box { background: #f0f1f8; border-radius: 8px; padding: 14px; text-align: center; }
-  .stat-box .num { font-size: 1.6em; font-weight: bold; color: var(--primary); }
-  .stat-box .label { font-size: 0.85em; color: var(--muted); }
-  .hidden { display: none; }
-  .small-muted { font-size: 0.8em; color: var(--muted); }
-  .sync-banner {
-    background: #fff3cd;
-    color: #6a5400;
-    padding: 8px 24px;
-    font-size: 0.85em;
-    text-align: center;
-  }
-  .sync-banner.ok { background: #d4f8e8; color: #00543a; }
-  .sync-banner a, .sync-banner button.linklike {
-    color: inherit;
-    font-weight: bold;
-    text-decoration: underline;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: inherit;
-    padding: 0;
-  }
+  :root{--bg:#f5f6fa;--card:#ffffff;--primary:#6c5ce7;--primary-light:#a29bfe;--text:#2d3436;--muted:#888;--border:#e0e0e0;--c1:#74b9ff;--c2:#ff7675;--c3:#55efc4;--off:#ffeaa7;}
+  *{box-sizing:border-box;}
+  body{font-family:"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;background:var(--bg);color:var(--text);margin:0;padding:0;}
+  header{background:var(--primary);color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+  header h1{font-size:1.3em;margin:0;}
+  nav{display:flex;gap:8px;flex-wrap:wrap;}
+  nav button{background:rgba(255,255,255,0.15);border:none;color:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:0.95em;}
+  nav button.active,nav button:hover{background:#fff;color:var(--primary);font-weight:bold;}
+  main{max-width:1100px;margin:20px auto;padding:0 16px 60px;}
+  .card{background:var(--card);border-radius:10px;padding:18px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+  .card h2{margin-top:0;font-size:1.1em;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  label{font-size:0.85em;color:var(--muted);display:block;margin-bottom:4px;}
+  input,select,textarea{padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.95em;font-family:inherit;}
+  .field{display:flex;flex-direction:column;}
+  button.btn{background:var(--primary);color:#fff;border:none;padding:9px 18px;border-radius:6px;cursor:pointer;font-size:0.95em;height:38px;align-self:flex-end;}
+  button.btn:hover{background:#5a4bd1;}
+  button.btn.secondary{background:#dfe6e9;color:var(--text);}
+  button.btn.danger{background:#ff7675;color:#fff;padding:4px 10px;height:auto;font-size:0.8em;}
+  .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .cal-header h3{margin:0;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-cell{height:110px;overflow:hidden;border:1px solid var(--border);border-radius:6px;padding:4px;font-size:0.78em;background:#fafafa;position:relative;cursor:pointer;transition:background 0.15s;}
+  .cal-cell:hover{background:#f0f0fb;}
+  .cal-cell.empty{background:transparent;border:none;cursor:default;}
+  .cal-cell.empty:hover{background:transparent;}
+  .cal-cell .date-num{font-weight:bold;margin-bottom:3px;color:var(--muted);}
+  .cal-cell.today{border:2px solid var(--primary);}
+  .event{border-radius:4px;padding:2px 4px;margin-bottom:2px;color:#fff;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+  .event.off{background:var(--off);color:#5a4500;}
+  .more-events{font-size:0.75em;color:var(--primary);padding:0 2px;cursor:pointer;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:12px;padding:24px;width:min(500px,95vw);box-shadow:0 8px 32px rgba(0,0,0,0.18);}
+  .modal h3{margin:0 0 16px;font-size:1.05em;}
+  .modal .row{margin-bottom:12px;}
+  .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+  .legend{display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;font-size:0.85em;}
+  .legend span.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:middle;}
+  table{width:100%;border-collapse:collapse;font-size:0.9em;}
+  th,td{border:1px solid var(--border);padding:8px;text-align:left;}
+  th{background:#f0f1f8;}
+  .tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.78em;color:#fff;}
+  .tag.pending{background:#fdcb6e;color:#5a4500;}
+  .tag.approved{background:#55efc4;color:#00543a;}
+  .tag.rejected{background:#ff7675;}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+  .stat-box{background:#f0f1f8;border-radius:8px;padding:14px;text-align:center;}
+  .stat-box .num{font-size:1.6em;font-weight:bold;color:var(--primary);}
+  .stat-box .label{font-size:0.85em;color:var(--muted);}
+  .hidden{display:none;}
+  .small-muted{font-size:0.8em;color:var(--muted);}
+  .sync-banner{background:#fff3cd;color:#6a5400;padding:8px 24px;font-size:0.85em;text-align:center;}
+  .sync-banner.ok{background:#d4f8e8;color:#00543a;}
+  .sync-banner a,.sync-banner button.linklike{color:inherit;font-weight:bold;text-decoration:underline;background:none;border:none;cursor:pointer;font-size:inherit;padding:0;}
 </style>
 </head>
 <body>
@@ -184,8 +75,6 @@
 </header>
 <div id="syncBanner" class="sync-banner hidden"></div>
 <main>
-
-  <!-- カレンダー -->
   <section id="view-calendar">
     <div class="card">
       <div class="cal-header">
@@ -198,791 +87,140 @@
       <div class="cal-grid" id="calGrid"></div>
     </div>
   </section>
-
-  <!-- 配信登録 -->
   <section id="view-register" class="hidden">
     <div class="card">
       <h2>配信予定の登録</h2>
       <div class="row">
-        <div class="field">
-          <label>ライバー</label>
-          <select id="r-streamer"></select>
-        </div>
-        <div class="field">
-          <label>商品</label>
-          <select id="r-product"></select>
-        </div>
-        <div class="field">
-          <label>日付</label>
-          <input type="date" id="r-date">
-        </div>
-        <div class="field">
-          <label>開始時刻</label>
-          <input type="time" id="r-start" value="20:00">
-        </div>
-        <div class="field">
-          <label>終了時刻</label>
-          <input type="time" id="r-end" value="22:00">
-        </div>
-        <div class="field" style="flex:1; min-width:160px;">
-          <label>タイトル/メモ</label>
-          <input type="text" id="r-title" placeholder="例：雑談配信">
-        </div>
+        <div class="field"><label>ライバー</label><select id="r-streamer"></select></div>
+        <div class="field"><label>商品</label><select id="r-product"></select></div>
+        <div class="field"><label>日付</label><input type="date" id="r-date"></div>
+        <div class="field"><label>開始時刻</label><input type="time" id="r-start" value="20:00"></div>
+        <div class="field"><label>終了時刻</label><input type="time" id="r-end" value="22:00"></div>
+        <div class="field" style="flex:1;min-width:160px;"><label>タイトル/メモ</label><input type="text" id="r-title" placeholder="例：雑談配信"></div>
         <button class="btn" id="addSchedule">追加</button>
       </div>
     </div>
-
     <div class="card">
       <h2>登録済み配信予定</h2>
       <div class="row" style="margin-bottom:10px;">
-        <div class="field">
-          <label>絞り込み(ライバー)</label>
-          <select id="filter-streamer"><option value="">すべて</option></select>
-        </div>
-        <div class="field">
-          <label>絞り込み(商品)</label>
-          <select id="filter-product"><option value="">すべて</option></select>
-        </div>
+        <div class="field"><label>絞り込み(ライバー)</label><select id="filter-streamer"><option value="">すべて</option></select></div>
+        <div class="field"><label>絞り込み(商品)</label><select id="filter-product"><option value="">すべて</option></select></div>
       </div>
-      <table>
-        <thead><tr><th>日付</th><th>ライバー</th><th>商品</th><th>時間</th><th>タイトル</th><th>時間数</th><th></th></tr></thead>
-        <tbody id="scheduleTable"></tbody>
-      </table>
+      <table><thead><tr><th>日付</th><th>ライバー</th><th>商品</th><th>時間</th><th>タイトル</th><th>時間数</th><th></th></tr></thead><tbody id="scheduleTable"></tbody></table>
     </div>
   </section>
-
-  <!-- 休み希望 -->
   <section id="view-dayoff" class="hidden">
     <div class="card">
       <h2>休み希望の登録</h2>
       <div class="row">
-        <div class="field">
-          <label>ライバー</label>
-          <select id="d-streamer"></select>
-        </div>
-        <div class="field">
-          <label>日付</label>
-          <input type="date" id="d-date">
-        </div>
-        <div class="field" style="flex:1; min-width:160px;">
-          <label>理由(任意)</label>
-          <input type="text" id="d-reason" placeholder="例：私用のため">
-        </div>
+        <div class="field"><label>ライバー</label><select id="d-streamer"></select></div>
+        <div class="field"><label>日付</label><input type="date" id="d-date"></div>
+        <div class="field" style="flex:1;min-width:160px;"><label>理由(任意)</label><input type="text" id="d-reason" placeholder="例：私用のため"></div>
         <button class="btn" id="addDayoff">申請</button>
       </div>
     </div>
-    <div class="card">
-      <h2>休み希望一覧</h2>
-      <table>
-        <thead><tr><th>日付</th><th>ライバー</th><th>理由</th><th>状態</th><th>操作</th></tr></thead>
-        <tbody id="dayoffTable"></tbody>
-      </table>
-      <p class="small-muted">※同じ日に配信予定が登録されている場合、カレンダー上で重複が確認できます。承認すると配信不可日としてカレンダーに表示されます。</p>
-    </div>
+    <div class="card"><h2>休み希望一覧</h2><table><thead><tr><th>日付</th><th>ライバー</th><th>理由</th><th>状態</th><th>操作</th></tr></thead><tbody id="dayoffTable"></tbody></table></div>
   </section>
-
-  <!-- 集計 -->
   <section id="view-stats" class="hidden">
-    <div class="card">
-      <h2>月間集計</h2>
-      <div class="row" style="margin-bottom:14px;">
-        <div class="field">
-          <label>対象月</label>
-          <input type="month" id="stat-month">
-        </div>
-      </div>
-      <div class="stat-grid" id="statGrid"></div>
-    </div>
-    <div class="card">
-      <h2>ライバー別 内訳</h2>
-      <table>
-        <thead><tr><th>ライバー</th><th>配信回数</th><th>合計時間</th><th>平均時間/回</th><th>休み希望数</th></tr></thead>
-        <tbody id="statTable"></tbody>
-      </table>
-    </div>
-    <div class="card">
-      <h2>商品別 内訳</h2>
-      <table>
-        <thead><tr><th>商品</th><th>配信回数</th><th>合計時間</th></tr></thead>
-        <tbody id="productStatTable"></tbody>
-      </table>
-    </div>
+    <div class="card"><h2>月間集計</h2><div class="row" style="margin-bottom:14px;"><div class="field"><label>対象月</label><input type="month" id="stat-month"></div></div><div class="stat-grid" id="statGrid"></div></div>
+    <div class="card"><h2>ライバー別 内訳</h2><table><thead><tr><th>ライバー</th><th>配信回数</th><th>合計時間</th><th>平均時間/回</th><th>休み希望数</th></tr></thead><tbody id="statTable"></tbody></table></div>
+    <div class="card"><h2>商品別 内訳</h2><table><thead><tr><th>商品</th><th>配信回数</th><th>合計時間</th></tr></thead><tbody id="productStatTable"></tbody></table></div>
   </section>
-
-  <!-- 設定 -->
   <section id="view-settings" class="hidden">
-    <div class="card">
-      <h2>ライバー設定</h2>
-      <p class="small-muted">名前とカラーを編集できます（最大5名まで追加可能）。</p>
-      <table>
-        <thead><tr><th>名前</th><th>カラー</th><th>操作</th></tr></thead>
-        <tbody id="streamerTable"></tbody>
-      </table>
-      <div class="row" style="margin-top:10px;">
-        <div class="field">
-          <label>新規ライバー名</label>
-          <input type="text" id="newStreamerName" placeholder="例：ライバーD">
-        </div>
-        <div class="field">
-          <label>カラー</label>
-          <input type="color" id="newStreamerColor" value="#fdcb6e">
-        </div>
-        <button class="btn" id="addStreamer">追加</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>商品設定</h2>
-      <p class="small-muted">配信予定に紐づける商品を編集できます。</p>
-      <table>
-        <thead><tr><th>商品名</th><th>操作</th></tr></thead>
-        <tbody id="productTable"></tbody>
-      </table>
-      <div class="row" style="margin-top:10px;">
-        <div class="field" style="flex:1; min-width:200px;">
-          <label>新規商品名</label>
-          <input type="text" id="newProductName" placeholder="例：新商品名">
-        </div>
-        <button class="btn" id="addProduct">追加</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>みんなで共有</h2>
-      <p class="small-muted" id="shareStatus">読み込み中...</p>
-      <div class="row" style="margin-bottom:10px;">
-        <button class="btn" id="copyShareLink">共有リンクをコピー</button>
-        <button class="btn secondary" id="syncNow">最新データに更新</button>
-      </div>
-      <p class="small-muted">この「共有リンク」をURLとして関係者に送ると、全員が同じ配信予定・休み希望を見たり編集したりできます。リンクを開くたびに自動で最新データを読み込みます。</p>
-      <div class="row" style="margin-top:10px;">
-        <div class="field" style="flex:1; min-width:240px;">
-          <label>別の共有データに接続(共有ID)</label>
-          <input type="text" id="connectShareId" placeholder="共有IDを貼り付け">
-        </div>
-        <button class="btn secondary" id="connectShare">接続</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>データ管理</h2>
-      <div class="row">
-        <button class="btn secondary" id="exportData">データをエクスポート(JSON)</button>
-        <button class="btn secondary" id="importBtn">インポート</button>
-        <input type="file" id="importFile" accept="application/json" class="hidden">
-        <button class="btn danger" id="resetData" style="height:38px; padding:9px 18px; font-size:0.95em;">全データ削除</button>
-      </div>
-    </div>
+    <div class="card"><h2>ライバー設定</h2><table><thead><tr><th>名前</th><th>カラー</th><th>操作</th></tr></thead><tbody id="streamerTable"></tbody></table><div class="row" style="margin-top:10px;"><div class="field"><label>新規ライバー名</label><input type="text" id="newStreamerName" placeholder="例：ライバーD"></div><div class="field"><label>カラー</label><input type="color" id="newStreamerColor" value="#fdcb6e"></div><button class="btn" id="addStreamer">追加</button></div></div>
+    <div class="card"><h2>商品設定</h2><table><thead><tr><th>商品名</th><th>操作</th></tr></thead><tbody id="productTable"></tbody></table><div class="row" style="margin-top:10px;"><div class="field" style="flex:1;min-width:200px;"><label>新規商品名</label><input type="text" id="newProductName" placeholder="例：新商品名"></div><button class="btn" id="addProduct">追加</button></div></div>
+    <div class="card"><h2>みんなで共有</h2><p class="small-muted" id="shareStatus">読み込み中...</p><div class="row" style="margin-bottom:10px;"><button class="btn" id="copyShareLink">共有リンクをコピー</button><button class="btn secondary" id="syncNow">最新データに更新</button></div><div class="row" style="margin-top:10px;"><div class="field" style="flex:1;min-width:240px;"><label>別の共有データに接続(共有ID)</label><input type="text" id="connectShareId" placeholder="共有IDを貼り付け"></div><button class="btn secondary" id="connectShare">接続</button></div></div>
+    <div class="card"><h2>データ管理</h2><div class="row"><button class="btn secondary" id="exportData">データをエクスポート(JSON)</button><button class="btn secondary" id="importBtn">インポート</button><input type="file" id="importFile" accept="application/json" class="hidden"><button class="btn danger" id="resetData" style="height:38px;padding:9px 18px;font-size:0.95em;">全データ削除</button></div></div>
   </section>
-
 </main>
-
+<div class="modal-overlay" id="quickAddModal">
+  <div class="modal">
+    <h3>📝 配信予定を追加 — <span id="modalDateLabel"></span></h3>
+    <div class="row"><div class="field" style="flex:1;"><label>ライバー</label><select id="m-streamer" style="width:100%;"></select></div></div>
+    <div class="row"><div class="field" style="flex:1;"><label>商品</label><select id="m-product" style="width:100%;"></select></div></div>
+    <div class="row" style="display:flex;gap:10px;"><div class="field" style="flex:1;"><label>開始時刻</label><input type="time" id="m-start" value="20:00" style="width:100%;"></div><div class="field" style="flex:1;"><label>終了時刻</label><input type="time" id="m-end" value="22:00" style="width:100%;"></div></div>
+    <div class="row"><div class="field" style="flex:1;"><label>タイトル/メモ</label><input type="text" id="m-title" placeholder="例：雑談配信" style="width:100%;"></div></div>
+    <div class="modal-footer"><button class="btn secondary" id="modalCancel">キャンセル</button><button class="btn" id="modalSave">追加</button></div>
+  </div>
+</div>
 <script>
-const STORAGE_KEY = 'liver_schedule_app_v1';
-
-let data = loadData();
-
-function loadData(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw){
-    try {
-      const parsed = JSON.parse(raw);
-      if(!parsed.products){
-        parsed.products = [
-          {id: 'p1', name: 'ナノブルシェイキングボトル'},
-          {id: 'p2', name: 'エンジェルルカ（韓国化粧品）'}
-        ];
-      }
-      return parsed;
-    } catch(e){}
-  }
-  return {
-    streamers: [
-      {id: 's1', name: 'ライバーA', color: '#74b9ff'},
-      {id: 's2', name: 'ライバーB', color: '#ff7675'},
-      {id: 's3', name: 'ライバーC', color: '#55efc4'}
-    ],
-    products: [
-      {id: 'p1', name: 'ナノブルシェイキングボトル'},
-      {id: 'p2', name: 'エンジェルルカ（韓国化粧品）'}
-    ],
-    schedules: [], // {id, streamerId, date, start, end, title, productId}
-    dayoffs: []    // {id, streamerId, date, reason, status: pending/approved/rejected}
-  };
-}
-function saveData(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  syncToCloud();
-}
-function uid(){ return Math.random().toString(36).slice(2,10); }
-
-// ---------- Cloud sync (kvdb.io, no account required) ----------
-const KVDB_BASE = 'https://kvdb.io/';
-let shareId = null;       // current shared blob id, or null = local-only mode
-let syncTimer = null;
-let syncInFlight = false;
-
-function getShareIdFromUrl(){
-  const params = new URLSearchParams(window.location.search);
-  return params.get('share');
-}
-
-function setShareIdInUrl(id){
-  const url = new URL(window.location.href);
-  url.searchParams.set('share', id);
-  window.history.replaceState({}, '', url.toString());
-}
-
-function showBanner(msg, ok){
-  const el = document.getElementById('syncBanner');
-  el.innerHTML = msg;
-  el.classList.remove('hidden');
-  el.classList.toggle('ok', !!ok);
-}
-
-function updateShareSettingsUI(){
-  const status = document.getElementById('shareStatus');
-  if(!status) return;
-  if(shareId){
-    status.innerHTML = `共有モードで動作中です。共有ID: <code>${escapeHtml(shareId)}</code>`;
-  } else {
-    status.textContent = 'このブラウザのみのローカルモードです（共有リンクを発行するとみんなで使えます）。';
-  }
-}
-
-async function initCloudSync(){
-  shareId = getShareIdFromUrl();
-  if(shareId){
-    // join existing shared data
-    showBanner('共有データを読み込み中...');
-    const remote = await fetchRemote(shareId);
-    if(remote){
-      data = remote;
-      saveLocalOnly();
-      showBanner('✅ 共有データに接続しました。みんなと同じ予定が見られます。', true);
-    } else {
-      showBanner('⚠️ 共有データの読み込みに失敗しました。ローカルのデータを表示しています。');
-      shareId = null;
-    }
-  } else {
-    // try to create a new shared data store automatically
-    showBanner('共有リンクを準備中...');
-    let createErr = '';
-    const newId = await createRemote(data).catch(e=>{ createErr = e.message; return null; });
-    if(newId){
-      shareId = newId;
-      setShareIdInUrl(newId);
-      showBanner('✅ 共有リンクを作成しました。設定画面から「共有リンクをコピー」してメンバーに送ってください。', true);
-    } else {
-      showBanner('⚠️ 共有機能に接続できませんでした。このブラウザのみのローカルモードで動作します。' + (createErr? ' ('+escapeHtml(createErr)+')':''));
-    }
-  }
-  updateShareSettingsUI();
-  refreshAllViews();
-  if(shareId){
-    syncTimer = setInterval(pollRemote, 20000);
-  }
-}
-
-function saveLocalOnly(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-async function fetchRemote(id){
-  try{
-    const res = await fetch(KVDB_BASE + id + '/data');
-    if(!res.ok) return null;
-    const text = await res.text();
-    if(!text) return null;
-    const json = JSON.parse(text);
-    if(!json.streamers || !json.schedules || !json.dayoffs) return null;
-    if(!json.products){
-      json.products = [
-        {id: 'p1', name: 'ナノブルシェイキングボトル'},
-        {id: 'p2', name: 'エンジェルルカ（韓国化粧品）'}
-      ];
-    }
-    return json;
-  }catch(e){
-    return null;
-  }
-}
-
-async function createRemote(initialData){
-  // step 1: create a new anonymous bucket
-  const res = await fetch(KVDB_BASE, {
-    method: 'POST',
-    headers: {'Content-Type':'application/x-www-form-urlencoded'},
-    body: 'email=anonymous@example.com'
-  });
-  if(!res.ok) throw new Error('bucket作成失敗 status='+res.status);
-  const bucketId = (await res.text()).trim();
-  if(!bucketId) throw new Error('bucket IDが空');
-  // step 2: store the initial data under the "data" key
-  const putRes = await fetch(KVDB_BASE + bucketId + '/data', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(initialData)
-  });
-  if(!putRes.ok) throw new Error('データ保存失敗 status='+putRes.status);
-  return bucketId;
-}
-
-async function syncToCloud(){
-  if(!shareId || syncInFlight) return;
-  syncInFlight = true;
-  try{
-    await fetch(KVDB_BASE + shareId + '/data', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(data)
-    });
-  }catch(e){
-    // ignore network errors; local copy is still saved
-  } finally {
-    syncInFlight = false;
-  }
-}
-
-async function pollRemote(){
-  if(!shareId || syncInFlight) return;
-  const remote = await fetchRemote(shareId);
-  if(remote){
-    data = remote;
-    saveLocalOnly();
-    refreshAllViews();
-  }
-}
-
-function refreshAllViews(){
-  renderCalendar();
-  if(!document.getElementById('view-register').classList.contains('hidden')) renderRegister();
-  if(!document.getElementById('view-dayoff').classList.contains('hidden')) renderDayoff();
-  if(!document.getElementById('view-stats').classList.contains('hidden')) renderStats();
-  if(!document.getElementById('view-settings').classList.contains('hidden')) renderSettings();
-}
-
-document.getElementById('copyShareLink').addEventListener('click', async ()=>{
-  if(!shareId){
-    alert('現在ローカルモードのため共有リンクがありません。ページを再読み込みしてみてください。');
-    return;
-  }
-  const url = new URL(window.location.href);
-  url.searchParams.set('share', shareId);
-  try{
-    await navigator.clipboard.writeText(url.toString());
-    alert('共有リンクをコピーしました:\n' + url.toString());
-  }catch(e){
-    prompt('このリンクをコピーしてください:', url.toString());
-  }
-});
-
-document.getElementById('syncNow').addEventListener('click', async ()=>{
-  if(!shareId){
-    alert('ローカルモードのため最新データの取得は行えません。');
-    return;
-  }
-  await pollRemote();
-  alert('最新データに更新しました。');
-});
-
-document.getElementById('connectShare').addEventListener('click', async ()=>{
-  const id = document.getElementById('connectShareId').value.trim();
-  if(!id){ alert('共有IDを入力してください'); return; }
-  showBanner('共有データを読み込み中...');
-  const remote = await fetchRemote(id);
-  if(remote){
-    data = remote;
-    shareId = id;
-    setShareIdInUrl(id);
-    saveLocalOnly();
-    if(syncTimer) clearInterval(syncTimer);
-    syncTimer = setInterval(pollRemote, 20000);
-    showBanner('✅ 共有データに接続しました。', true);
-    updateShareSettingsUI();
-    refreshAllViews();
-  } else {
-    alert('指定された共有IDのデータが見つかりませんでした。');
-  }
-});
-
-// ---------- Navigation ----------
-const views = ['calendar','register','dayoff','stats','settings'];
-document.querySelectorAll('nav button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    views.forEach(v=> document.getElementById('view-'+v).classList.add('hidden'));
-    document.getElementById('view-'+btn.dataset.view).classList.remove('hidden');
-    if(btn.dataset.view==='register') renderRegister();
-    if(btn.dataset.view==='dayoff') renderDayoff();
-    if(btn.dataset.view==='stats') renderStats();
-    if(btn.dataset.view==='settings') renderSettings();
-    if(btn.dataset.view==='calendar') renderCalendar();
-  });
-});
-
-// ---------- Calendar ----------
-let calYear, calMonth; // calMonth: 0-11
-const today = new Date();
-calYear = today.getFullYear();
-calMonth = today.getMonth();
-
-document.getElementById('prevMonth').onclick = ()=>{
-  calMonth--; if(calMonth<0){calMonth=11; calYear--;}
-  renderCalendar();
-};
-document.getElementById('nextMonth').onclick = ()=>{
-  calMonth++; if(calMonth>11){calMonth=0; calYear++;}
-  renderCalendar();
-};
-
+const STORAGE_KEY='liver_schedule_app_v1';
+let data=loadData();
+function loadData(){const raw=localStorage.getItem(STORAGE_KEY);if(raw){try{const p=JSON.parse(raw);if(!p.products)p.products=[{id:'p1',name:'ナノブルシェイキングボトル'},{id:'p2',name:'エンジェルルカ（韓国化粧品）'}];return p;}catch(e){}}return{streamers:[{id:'s1',name:'ライバーA',color:'#74b9ff'},{id:'s2',name:'ライバーB',color:'#ff7675'},{id:'s3',name:'ライバーC',color:'#55efc4'}],products:[{id:'p1',name:'ナノブルシェイキングボトル'},{id:'p2',name:'エンジェルルカ（韓国化粧品）'}],schedules:[],dayoffs:[]};}
+function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));syncToCloud();}
+function uid(){return Math.random().toString(36).slice(2,10);}
+const STORAGE_BASE='https://api.jsonstorage.net/v1/json/';
+let shareId=null,syncTimer=null,syncInFlight=false;
+function getShareIdFromUrl(){return new URLSearchParams(window.location.search).get('share');}
+function setShareIdInUrl(id){const url=new URL(window.location.href);url.searchParams.set('share',id);window.history.replaceState({},'',url.toString());}
+function showBanner(msg,ok){const el=document.getElementById('syncBanner');el.innerHTML=msg;el.classList.remove('hidden');el.classList.toggle('ok',!!ok);}
+function updateShareSettingsUI(){const s=document.getElementById('shareStatus');if(!s)return;s.innerHTML=shareId?'共有モードで動作中です。共有ID: <code>'+escapeHtml(shareId)+'</code>':'このブラウザのみのローカルモードです。';}
+async function initCloudSync(){shareId=getShareIdFromUrl();if(shareId){showBanner('共有データを読み込み中...');const r=await fetchRemote(shareId);if(r){data=r;saveLocalOnly();showBanner('✅ 共有データに接続しました。',true);}else{showBanner('⚠️ 共有データの読み込みに失敗しました。');shareId=null;}}else{showBanner('共有リンクを準備中...');let err='';const id=await createRemote(data).catch(e=>{err=e.message;return null;});if(id){shareId=id;setShareIdInUrl(id);showBanner('✅ 共有リンクを作成しました。設定画面から「共有リンクをコピー」してメンバーに送ってください。',true);}else showBanner('⚠️ 共有機能に接続できませんでした。'+(err?' ('+escapeHtml(err)+')':'')); }updateShareSettingsUI();refreshAllViews();if(shareId)syncTimer=setInterval(pollRemote,20000);}
+function saveLocalOnly(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
+async function fetchRemote(id){try{const r=await fetch(STORAGE_BASE+id);if(!r.ok)return null;const j=await r.json();if(!j||!j.streamers||!j.schedules||!j.dayoffs)return null;if(!j.products)j.products=[{id:'p1',name:'ナノブルシェイキングボトル'},{id:'p2',name:'エンジェルルカ（韓国化粧品）'}];return j;}catch(e){return null;}}
+async function createRemote(d){const r=await fetch(STORAGE_BASE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error('作成失敗 status='+r.status);const j=await r.json();let id=j.id||j.uri||'';if(id.includes('/'))id=id.split('/').pop();if(!id)throw new Error('IDが取得できませんでした');return id;}
+async function syncToCloud(){if(!shareId||syncInFlight)return;syncInFlight=true;try{await fetch(STORAGE_BASE+shareId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});}catch(e){}finally{syncInFlight=false;}}
+async function pollRemote(){if(!shareId||syncInFlight)return;const r=await fetchRemote(shareId);if(r){data=r;saveLocalOnly();refreshAllViews();}}
+function refreshAllViews(){renderCalendar();if(!document.getElementById('view-register').classList.contains('hidden'))renderRegister();if(!document.getElementById('view-dayoff').classList.contains('hidden'))renderDayoff();if(!document.getElementById('view-stats').classList.contains('hidden'))renderStats();if(!document.getElementById('view-settings').classList.contains('hidden'))renderSettings();}
+document.getElementById('copyShareLink').addEventListener('click',async()=>{if(!shareId){alert('ローカルモードです。再読み込みしてください。');return;}const url=new URL(window.location.href);url.searchParams.set('share',shareId);try{await navigator.clipboard.writeText(url.toString());alert('共有リンクをコピーしました:\n'+url.toString());}catch(e){prompt('このリンクをコピーしてください:',url.toString());}});
+document.getElementById('syncNow').addEventListener('click',async()=>{if(!shareId){alert('ローカルモードです。');return;}await pollRemote();alert('最新データに更新しました。');});
+document.getElementById('connectShare').addEventListener('click',async()=>{const id=document.getElementById('connectShareId').value.trim();if(!id){alert('共有IDを入力してください');return;}showBanner('読み込み中...');const r=await fetchRemote(id);if(r){data=r;shareId=id;setShareIdInUrl(id);saveLocalOnly();if(syncTimer)clearInterval(syncTimer);syncTimer=setInterval(pollRemote,20000);showBanner('✅ 共有データに接続しました。',true);updateShareSettingsUI();refreshAllViews();}else alert('見つかりませんでした。');});
+const views=['calendar','register','dayoff','stats','settings'];
+document.querySelectorAll('nav button').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');views.forEach(v=>document.getElementById('view-'+v).classList.add('hidden'));document.getElementById('view-'+btn.dataset.view).classList.remove('hidden');if(btn.dataset.view==='register')renderRegister();if(btn.dataset.view==='dayoff')renderDayoff();if(btn.dataset.view==='stats')renderStats();if(btn.dataset.view==='settings')renderSettings();if(btn.dataset.view==='calendar')renderCalendar();});});
+let calYear,calMonth;const today=new Date();calYear=today.getFullYear();calMonth=today.getMonth();
+document.getElementById('prevMonth').onclick=()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();};
+document.getElementById('nextMonth').onclick=()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();};
 function renderCalendar(){
-  document.getElementById('calTitle').textContent = `${calYear}年 ${calMonth+1}月`;
-
-  // legend
-  const legend = document.getElementById('legend');
-  legend.innerHTML = data.streamers.map(s=>
-    `<span><span class="dot" style="background:${s.color}"></span>${escapeHtml(s.name)}</span>`
-  ).join('') + `<span><span class="dot" style="background:var(--off)"></span>休み希望(承認済)</span>`;
-
-  // header row
-  const head = document.getElementById('calGridHead');
-  head.innerHTML = ['日','月','火','水','木','金','土'].map(d=>`<div style="text-align:center;font-weight:bold;padding:4px;">${d}</div>`).join('');
-
-  const grid = document.getElementById('calGrid');
-  grid.innerHTML = '';
-  const firstDay = new Date(calYear, calMonth, 1);
-  const startWeekday = firstDay.getDay();
-  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
-
-  for(let i=0;i<startWeekday;i++){
-    grid.innerHTML += '<div class="cal-cell empty"></div>';
-  }
-  for(let d=1; d<=daysInMonth; d++){
-    const dateStr = formatDate(calYear, calMonth, d);
-    const isToday = (calYear===today.getFullYear() && calMonth===today.getMonth() && d===today.getDate());
-    let cell = `<div class="cal-cell ${isToday?'today':''}"><div class="date-num">${d}</div>`;
-
-    const daySchedules = data.schedules.filter(s=>s.date===dateStr);
-    daySchedules.forEach(s=>{
-      const streamer = data.streamers.find(st=>st.id===s.streamerId);
-      const product = data.products.find(p=>p.id===s.productId);
-      const color = streamer ? streamer.color : '#999';
-      const name = streamer ? streamer.name : '?';
-      const productLabel = product ? `[${product.name}] ` : '';
-      const titleAttr = `${escapeHtml(name)} ${s.start}-${s.end} ${productLabel}${escapeHtml(s.title||'')}`;
-      cell += `<div class="event" style="background:${color}" title="${titleAttr}">${escapeHtml(name)} ${s.start}-${s.end}${product? ' '+escapeHtml(productLabel):''}${s.title? ' '+escapeHtml(s.title):''}</div>`;
-    });
-
-    const dayOffsApproved = data.dayoffs.filter(o=>o.date===dateStr && o.status==='approved');
-    dayOffsApproved.forEach(o=>{
-      const streamer = data.streamers.find(st=>st.id===o.streamerId);
-      const name = streamer ? streamer.name : '?';
-      cell += `<div class="event off" title="${escapeHtml(name)} 休み">${escapeHtml(name)} 休み</div>`;
-    });
-
-    cell += '</div>';
-    grid.innerHTML += cell;
+  document.getElementById('calTitle').textContent=calYear+'年 '+(calMonth+1)+'月';
+  document.getElementById('legend').innerHTML=data.streamers.map(s=>'<span><span class="dot" style="background:'+s.color+'"></span>'+escapeHtml(s.name)+'</span>').join('')+'<span><span class="dot" style="background:var(--off)"></span>休み希望(承認済)</span>';
+  document.getElementById('calGridHead').innerHTML=['日','月','火','水','木','金','土'].map(d=>'<div style="text-align:center;font-weight:bold;padding:4px;">'+d+'</div>').join('');
+  const grid=document.getElementById('calGrid');grid.innerHTML='';
+  const sw=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate();
+  for(let i=0;i<sw;i++)grid.innerHTML+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=dim;d++){
+    const ds=formatDate(calYear,calMonth,d),isT=(calYear===today.getFullYear()&&calMonth===today.getMonth()&&d===today.getDate());
+    let cell='<div class="cal-cell '+(isT?'today':'')+'" onclick="openQuickAdd(\''+ds+'\')">'+'<div class="date-num">'+d+'</div>';
+    const evs=[];
+    data.schedules.filter(s=>s.date===ds).forEach(s=>{const st=data.streamers.find(x=>x.id===s.streamerId);evs.push('<div class="event" style="background:'+(st?st.color:'#999')+'" title="'+escapeHtml(st?st.name:'?')+' '+s.start+'-'+s.end+'">'+escapeHtml(st?st.name:'?')+' '+s.start+'-'+s.end+'</div>');});
+    data.dayoffs.filter(o=>o.date===ds&&o.status==='approved').forEach(o=>{const st=data.streamers.find(x=>x.id===o.streamerId);evs.push('<div class="event off">'+escapeHtml(st?st.name:'?')+' 休み</div>');});
+    evs.slice(0,2).forEach(ev=>{cell+=ev;});
+    if(evs.length>2)cell+='<div class="more-events">'+'+'+(evs.length-2)+'件</div>';
+    cell+='</div>';grid.innerHTML+=cell;
   }
 }
-
-function formatDate(y,m,d){
-  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-}
-function escapeHtml(str){
-  if(!str) return '';
-  return str.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-// ---------- Register schedules ----------
-function fillStreamerSelects(){
-  const opts = data.streamers.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
-  document.getElementById('r-streamer').innerHTML = opts;
-  document.getElementById('d-streamer').innerHTML = opts;
-  document.getElementById('filter-streamer').innerHTML = '<option value="">すべて</option>' + opts;
-
-  const prodOpts = data.products.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-  document.getElementById('r-product').innerHTML = '<option value="">(指定なし)</option>' + prodOpts;
-  document.getElementById('filter-product').innerHTML = '<option value="">すべて</option>' + prodOpts;
-}
-
-document.getElementById('addSchedule').onclick = ()=>{
-  const streamerId = document.getElementById('r-streamer').value;
-  const productId = document.getElementById('r-product').value;
-  const date = document.getElementById('r-date').value;
-  const start = document.getElementById('r-start').value;
-  const end = document.getElementById('r-end').value;
-  const title = document.getElementById('r-title').value.trim();
-  if(!date || !start || !end){
-    alert('日付・開始時刻・終了時刻を入力してください');
-    return;
-  }
-  data.schedules.push({id: uid(), streamerId, productId, date, start, end, title});
-  saveData();
-  document.getElementById('r-title').value='';
-  renderRegister();
-  renderCalendar();
-};
-
-document.getElementById('filter-streamer').addEventListener('change', renderRegister);
-document.getElementById('filter-product').addEventListener('change', renderRegister);
-
-function renderRegister(){
-  fillStreamerSelects();
-  const filter = document.getElementById('filter-streamer').value;
-  const productFilter = document.getElementById('filter-product').value;
-  const tbody = document.getElementById('scheduleTable');
-  let list = [...data.schedules].sort((a,b)=> a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
-  if(filter) list = list.filter(s=>s.streamerId===filter);
-  if(productFilter) list = list.filter(s=>s.productId===productFilter);
-  tbody.innerHTML = list.map(s=>{
-    const streamer = data.streamers.find(st=>st.id===s.streamerId);
-    const product = data.products.find(p=>p.id===s.productId);
-    const hours = calcHours(s.start, s.end);
-    return `<tr>
-      <td>${s.date}</td>
-      <td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${streamer?streamer.color:'#999'}"></span> ${escapeHtml(streamer?streamer.name:'?')}</td>
-      <td>${escapeHtml(product?product.name:'-')}</td>
-      <td>${s.start} - ${s.end}</td>
-      <td>${escapeHtml(s.title||'')}</td>
-      <td>${hours.toFixed(1)}h</td>
-      <td><button class="btn danger" onclick="deleteSchedule('${s.id}')">削除</button></td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="7" class="small-muted">登録された配信予定はありません</td></tr>';
-}
-
-function deleteSchedule(id){
-  if(!confirm('この配信予定を削除しますか？')) return;
-  data.schedules = data.schedules.filter(s=>s.id!==id);
-  saveData();
-  renderRegister();
-  renderCalendar();
-}
-
-function calcHours(start, end){
-  const [sh,sm] = start.split(':').map(Number);
-  const [eh,em] = end.split(':').map(Number);
-  let mins = (eh*60+em) - (sh*60+sm);
-  if(mins < 0) mins += 24*60; // overnight
-  return mins/60;
-}
-
-// ---------- Day-off requests ----------
-document.getElementById('addDayoff').onclick = ()=>{
-  const streamerId = document.getElementById('d-streamer').value;
-  const date = document.getElementById('d-date').value;
-  const reason = document.getElementById('d-reason').value.trim();
-  if(!date){ alert('日付を入力してください'); return; }
-  data.dayoffs.push({id: uid(), streamerId, date, reason, status:'pending'});
-  saveData();
-  document.getElementById('d-reason').value='';
-  renderDayoff();
-};
-
-function renderDayoff(){
-  fillStreamerSelects();
-  const tbody = document.getElementById('dayoffTable');
-  let list = [...data.dayoffs].sort((a,b)=>a.date.localeCompare(b.date));
-  tbody.innerHTML = list.map(o=>{
-    const streamer = data.streamers.find(st=>st.id===o.streamerId);
-    const statusLabel = {pending:'申請中', approved:'承認済', rejected:'却下'}[o.status];
-    const statusClass = o.status;
-    return `<tr>
-      <td>${o.date}</td>
-      <td>${escapeHtml(streamer?streamer.name:'?')}</td>
-      <td>${escapeHtml(o.reason||'')}</td>
-      <td><span class="tag ${statusClass}">${statusLabel}</span></td>
-      <td>
-        ${o.status!=='approved' ? `<button class="btn secondary" style="padding:4px 10px;height:auto;font-size:0.8em;" onclick="setDayoffStatus('${o.id}','approved')">承認</button>` : ''}
-        ${o.status!=='rejected' ? `<button class="btn secondary" style="padding:4px 10px;height:auto;font-size:0.8em;" onclick="setDayoffStatus('${o.id}','rejected')">却下</button>` : ''}
-        <button class="btn danger" onclick="deleteDayoff('${o.id}')">削除</button>
-      </td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="5" class="small-muted">休み希望はありません</td></tr>';
-}
-
-function setDayoffStatus(id, status){
-  const o = data.dayoffs.find(d=>d.id===id);
-  if(o){ o.status = status; saveData(); renderDayoff(); renderCalendar(); }
-}
-function deleteDayoff(id){
-  if(!confirm('この休み希望を削除しますか？')) return;
-  data.dayoffs = data.dayoffs.filter(d=>d.id!==id);
-  saveData();
-  renderDayoff();
-  renderCalendar();
-}
-
-// ---------- Stats ----------
-document.getElementById('stat-month').addEventListener('change', renderStats);
-
-function renderStats(){
-  const monthInput = document.getElementById('stat-month');
-  if(!monthInput.value){
-    monthInput.value = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
-  }
-  const [y,m] = monthInput.value.split('-').map(Number);
-
-  const monthSchedules = data.schedules.filter(s=>{
-    const [sy,sm] = s.date.split('-').map(Number);
-    return sy===y && sm===m;
-  });
-  const monthDayoffs = data.dayoffs.filter(o=>{
-    const [oy,om] = o.date.split('-').map(Number);
-    return oy===y && om===m;
-  });
-
-  const totalSessions = monthSchedules.length;
-  const totalHours = monthSchedules.reduce((sum,s)=>sum+calcHours(s.start,s.end),0);
-
-  const statGrid = document.getElementById('statGrid');
-  statGrid.innerHTML = `
-    <div class="stat-box"><div class="num">${totalSessions}</div><div class="label">総配信回数</div></div>
-    <div class="stat-box"><div class="num">${totalHours.toFixed(1)}h</div><div class="label">総配信時間</div></div>
-    <div class="stat-box"><div class="num">${totalSessions? (totalHours/totalSessions).toFixed(1):'0.0'}h</div><div class="label">平均配信時間/回</div></div>
-    <div class="stat-box"><div class="num">${monthDayoffs.length}</div><div class="label">休み希望件数</div></div>
-  `;
-
-  const tbody = document.getElementById('statTable');
-  tbody.innerHTML = data.streamers.map(s=>{
-    const sessions = monthSchedules.filter(sc=>sc.streamerId===s.id);
-    const hours = sessions.reduce((sum,sc)=>sum+calcHours(sc.start,sc.end),0);
-    const offs = monthDayoffs.filter(o=>o.streamerId===s.id).length;
-    return `<tr>
-      <td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${s.color}"></span> ${escapeHtml(s.name)}</td>
-      <td>${sessions.length}</td>
-      <td>${hours.toFixed(1)}h</td>
-      <td>${sessions.length? (hours/sessions.length).toFixed(1):'0.0'}h</td>
-      <td>${offs}</td>
-    </tr>`;
-  }).join('');
-
-  const productTbody = document.getElementById('productStatTable');
-  const rows = data.products.map(p=>{
-    const sessions = monthSchedules.filter(sc=>sc.productId===p.id);
-    const hours = sessions.reduce((sum,sc)=>sum+calcHours(sc.start,sc.end),0);
-    return `<tr><td>${escapeHtml(p.name)}</td><td>${sessions.length}</td><td>${hours.toFixed(1)}h</td></tr>`;
-  });
-  const noProductSessions = monthSchedules.filter(sc=>!sc.productId);
-  if(noProductSessions.length){
-    const hours = noProductSessions.reduce((sum,sc)=>sum+calcHours(sc.start,sc.end),0);
-    rows.push(`<tr><td>(指定なし)</td><td>${noProductSessions.length}</td><td>${hours.toFixed(1)}h</td></tr>`);
-  }
-  productTbody.innerHTML = rows.join('') || '<tr><td colspan="3" class="small-muted">データがありません</td></tr>';
-}
-
-// ---------- Settings ----------
-function renderSettings(){
-  updateShareSettingsUI();
-  const tbody = document.getElementById('streamerTable');
-  tbody.innerHTML = data.streamers.map(s=>`
-    <tr>
-      <td><input type="text" value="${escapeHtml(s.name)}" onchange="updateStreamerName('${s.id}', this.value)"></td>
-      <td><input type="color" value="${s.color}" onchange="updateStreamerColor('${s.id}', this.value)"></td>
-      <td><button class="btn danger" onclick="deleteStreamer('${s.id}')">削除</button></td>
-    </tr>
-  `).join('');
-
-  const productTbody = document.getElementById('productTable');
-  productTbody.innerHTML = data.products.map(p=>`
-    <tr>
-      <td><input type="text" value="${escapeHtml(p.name)}" onchange="updateProductName('${p.id}', this.value)"></td>
-      <td><button class="btn danger" onclick="deleteProduct('${p.id}')">削除</button></td>
-    </tr>
-  `).join('') || '<tr><td colspan="2" class="small-muted">商品が登録されていません</td></tr>';
-}
-function updateProductName(id, name){
-  const p = data.products.find(x=>x.id===id);
-  if(p){ p.name = name; saveData(); renderCalendar(); }
-}
-function deleteProduct(id){
-  if(!confirm('この商品を削除しますか？関連する配信予定の商品指定は解除されます。')) return;
-  data.products = data.products.filter(p=>p.id!==id);
-  data.schedules.forEach(s=>{ if(s.productId===id) s.productId=''; });
-  saveData();
-  renderSettings();
-  renderCalendar();
-}
-document.getElementById('addProduct').onclick = ()=>{
-  const name = document.getElementById('newProductName').value.trim();
-  if(!name){ alert('商品名を入力してください'); return; }
-  data.products.push({id: uid(), name});
-  saveData();
-  document.getElementById('newProductName').value='';
-  renderSettings();
-};
-function updateStreamerName(id, name){
-  const s = data.streamers.find(x=>x.id===id);
-  if(s){ s.name = name; saveData(); renderCalendar(); }
-}
-function updateStreamerColor(id, color){
-  const s = data.streamers.find(x=>x.id===id);
-  if(s){ s.color = color; saveData(); renderCalendar(); }
-}
-function deleteStreamer(id){
-  if(!confirm('このライバーを削除しますか？関連する配信予定・休み希望も削除されます。')) return;
-  data.streamers = data.streamers.filter(s=>s.id!==id);
-  data.schedules = data.schedules.filter(s=>s.streamerId!==id);
-  data.dayoffs = data.dayoffs.filter(o=>o.streamerId!==id);
-  saveData();
-  renderSettings();
-  renderCalendar();
-}
-document.getElementById('addStreamer').onclick = ()=>{
-  const name = document.getElementById('newStreamerName').value.trim();
-  const color = document.getElementById('newStreamerColor').value;
-  if(!name){ alert('名前を入力してください'); return; }
-  if(data.streamers.length>=5){ alert('ライバーは最大5名まで登録できます'); return; }
-  data.streamers.push({id: uid(), name, color});
-  saveData();
-  document.getElementById('newStreamerName').value='';
-  renderSettings();
-  renderCalendar();
-};
-
-// data export/import/reset
-document.getElementById('exportData').onclick = ()=>{
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `liver_schedule_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-};
-document.getElementById('importBtn').onclick = ()=> document.getElementById('importFile').click();
-document.getElementById('importFile').addEventListener('change', (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev)=>{
-    try{
-      const imported = JSON.parse(ev.target.result);
-      if(imported.streamers && imported.schedules && imported.dayoffs){
-        data = imported;
-        saveData();
-        renderCalendar(); renderRegister(); renderDayoff(); renderStats(); renderSettings();
-        alert('インポートしました');
-      } else {
-        alert('ファイル形式が正しくありません');
-      }
-    }catch(err){
-      alert('読み込みに失敗しました: '+err.message);
-    }
-  };
-  reader.readAsText(file);
-});
-document.getElementById('resetData').onclick = ()=>{
-  if(!confirm('すべてのデータを削除します。よろしいですか？この操作は取り消せません。')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  data = loadData();
-  renderCalendar(); renderRegister(); renderDayoff(); renderStats(); renderSettings();
-};
-
-// ---------- init ----------
-document.getElementById('r-date').valueAsDate = new Date();
-document.getElementById('d-date').valueAsDate = new Date();
-fillStreamerSelects();
-renderCalendar();
-initCloudSync();
+function formatDate(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
+function escapeHtml(s){if(!s)return'';return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',['>']:'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fillStreamerSelects(){const opts=data.streamers.map(s=>'<option value="'+s.id+'">'+escapeHtml(s.name)+'</option>').join('');document.getElementById('r-streamer').innerHTML=opts;document.getElementById('d-streamer').innerHTML=opts;document.getElementById('filter-streamer').innerHTML='<option value="">すべて</option>'+opts;const po=data.products.map(p=>'<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>').join('');document.getElementById('r-product').innerHTML='<option value="">(指定なし)</option>'+po;document.getElementById('filter-product').innerHTML='<option value="">すべて</option>'+po;}
+document.getElementById('addSchedule').onclick=()=>{const sid=document.getElementById('r-streamer').value,pid=document.getElementById('r-product').value,date=document.getElementById('r-date').value,start=document.getElementById('r-start').value,end=document.getElementById('r-end').value,title=document.getElementById('r-title').value.trim();if(!date||!start||!end){alert('日付・開始時刻・終了時刻を入力してください');return;}data.schedules.push({id:uid(),streamerId:sid,productId:pid,date,start,end,title});saveData();document.getElementById('r-title').value='';renderRegister();renderCalendar();};
+document.getElementById('filter-streamer').addEventListener('change',renderRegister);document.getElementById('filter-product').addEventListener('change',renderRegister);
+function renderRegister(){fillStreamerSelects();const f=document.getElementById('filter-streamer').value,pf=document.getElementById('filter-product').value;let list=[...data.schedules].sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start));if(f)list=list.filter(s=>s.streamerId===f);if(pf)list=list.filter(s=>s.productId===pf);document.getElementById('scheduleTable').innerHTML=list.map(s=>{const st=data.streamers.find(x=>x.id===s.streamerId),p=data.products.find(x=>x.id===s.productId),h=calcHours(s.start,s.end);return'<tr><td>'+s.date+'</td><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+(st?st.color:'#999')+'"></span> '+escapeHtml(st?st.name:'?')+'</td><td>'+escapeHtml(p?p.name:'-')+'</td><td>'+s.start+' - '+s.end+'</td><td>'+escapeHtml(s.title||'')+'</td><td>'+h.toFixed(1)+'h</td><td><button class="btn danger" onclick="deleteSchedule(\''+s.id+'\')">削除</button></td></tr>';}).join('')||'<tr><td colspan="7" class="small-muted">登録された配信予定はありません</td></tr>';}
+function deleteSchedule(id){if(!confirm('削除しますか？'))return;data.schedules=data.schedules.filter(s=>s.id!==id);saveData();renderRegister();renderCalendar();}
+function calcHours(s,e){const[sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number);let m=(eh*60+em)-(sh*60+sm);if(m<0)m+=1440;return m/60;}
+document.getElementById('addDayoff').onclick=()=>{const sid=document.getElementById('d-streamer').value,date=document.getElementById('d-date').value,reason=document.getElementById('d-reason').value.trim();if(!date){alert('日付を入力してください');return;}data.dayoffs.push({id:uid(),streamerId:sid,date,reason,status:'pending'});saveData();document.getElementById('d-reason').value='';renderDayoff();};
+function renderDayoff(){fillStreamerSelects();const labels={pending:'申請中',approved:'承認済',rejected:'却下'};document.getElementById('dayoffTable').innerHTML=[...data.dayoffs].sort((a,b)=>a.date.localeCompare(b.date)).map(o=>{const st=data.streamers.find(x=>x.id===o.streamerId);return'<tr><td>'+o.date+'</td><td>'+escapeHtml(st?st.name:'?')+'</td><td>'+escapeHtml(o.reason||'')+'</td><td><span class="tag '+o.status+'">'+labels[o.status]+'</span></td><td>'+(o.status!=='approved'?'<button class="btn secondary" style="padding:4px 10px;height:auto;font-size:0.8em;" onclick="setDayoffStatus(\''+o.id+'\',\'approved\')">承認</button>':'')+' '+(o.status!=='rejected'?'<button class="btn secondary" style="padding:4px 10px;height:auto;font-size:0.8em;" onclick="setDayoffStatus(\''+o.id+'\',\'rejected\')">却下</button>':'')+'<button class="btn danger" onclick="deleteDayoff(\''+o.id+'\')">削除</button></td></tr>';}).join('')||'<tr><td colspan="5" class="small-muted">休み希望はありません</td></tr>';}
+function setDayoffStatus(id,s){const o=data.dayoffs.find(d=>d.id===id);if(o){o.status=s;saveData();renderDayoff();renderCalendar();}}
+function deleteDayoff(id){if(!confirm('削除しますか？'))return;data.dayoffs=data.dayoffs.filter(d=>d.id!==id);saveData();renderDayoff();renderCalendar();}
+document.getElementById('stat-month').addEventListener('change',renderStats);
+function renderStats(){const mi=document.getElementById('stat-month');if(!mi.value)mi.value=calYear+'-'+String(calMonth+1).padStart(2,'0');const[y,m]=mi.value.split('-').map(Number);const ms=data.schedules.filter(s=>{const[sy,sm]=s.date.split('-').map(Number);return sy===y&&sm===m;});const md=data.dayoffs.filter(o=>{const[oy,om]=o.date.split('-').map(Number);return oy===y&&om===m;});const ts=ms.length,th=ms.reduce((s,x)=>s+calcHours(x.start,x.end),0);document.getElementById('statGrid').innerHTML='<div class="stat-box"><div class="num">'+ts+'</div><div class="label">総配信回数</div></div><div class="stat-box"><div class="num">'+th.toFixed(1)+'h</div><div class="label">総配信時間</div></div><div class="stat-box"><div class="num">'+(ts?(th/ts).toFixed(1):'0.0')+'h</div><div class="label">平均配信時間/回</div></div><div class="stat-box"><div class="num">'+md.length+'</div><div class="label">休み希望件数</div></div>';document.getElementById('statTable').innerHTML=data.streamers.map(s=>{const ss=ms.filter(x=>x.streamerId===s.id),h=ss.reduce((t,x)=>t+calcHours(x.start,x.end),0),offs=md.filter(o=>o.streamerId===s.id).length;return'<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+s.color+'"></span> '+escapeHtml(s.name)+'</td><td>'+ss.length+'</td><td>'+h.toFixed(1)+'h</td><td>'+(ss.length?(h/ss.length).toFixed(1):'0.0')+'h</td><td>'+offs+'</td></tr>';}).join('');const rows=data.products.map(p=>{const ss=ms.filter(x=>x.productId===p.id),h=ss.reduce((t,x)=>t+calcHours(x.start,x.end),0);return'<tr><td>'+escapeHtml(p.name)+'</td><td>'+ss.length+'</td><td>'+h.toFixed(1)+'h</td></tr>';});const np=ms.filter(x=>!x.productId);if(np.length){const h=np.reduce((t,x)=>t+calcHours(x.start,x.end),0);rows.push('<tr><td>(指定なし)</td><td>'+np.length+'</td><td>'+h.toFixed(1)+'h</td></tr>');}document.getElementById('productStatTable').innerHTML=rows.join('')||'<tr><td colspan="3" class="small-muted">データがありません</td></tr>';}
+function renderSettings(){updateShareSettingsUI();document.getElementById('streamerTable').innerHTML=data.streamers.map(s=>'<tr><td><input type="text" value="'+escapeHtml(s.name)+'" onchange="updateStreamerName(\''+s.id+'\',this.value)"></td><td><input type="color" value="'+s.color+'" onchange="updateStreamerColor(\''+s.id+'\',this.value)"></td><td><button class="btn danger" onclick="deleteStreamer(\''+s.id+'\')">削除</button></td></tr>').join('');document.getElementById('productTable').innerHTML=data.products.map(p=>'<tr><td><input type="text" value="'+escapeHtml(p.name)+'" onchange="updateProductName(\''+p.id+'\',this.value)"></td><td><button class="btn danger" onclick="deleteProduct(\''+p.id+'\')">削除</button></td></tr>').join('')||'<tr><td colspan="2" class="small-muted">商品が登録されていません</td></tr>';}
+function updateProductName(id,n){const p=data.products.find(x=>x.id===id);if(p){p.name=n;saveData();renderCalendar();}}
+function deleteProduct(id){if(!confirm('削除しますか？'))return;data.products=data.products.filter(p=>p.id!==id);data.schedules.forEach(s=>{if(s.productId===id)s.productId='';});saveData();renderSettings();renderCalendar();}
+document.getElementById('addProduct').onclick=()=>{const n=document.getElementById('newProductName').value.trim();if(!n){alert('商品名を入力してください');return;}data.products.push({id:uid(),name:n});saveData();document.getElementById('newProductName').value='';renderSettings();};
+function updateStreamerName(id,n){const s=data.streamers.find(x=>x.id===id);if(s){s.name=n;saveData();renderCalendar();}}
+function updateStreamerColor(id,c){const s=data.streamers.find(x=>x.id===id);if(s){s.color=c;saveData();renderCalendar();}}
+function deleteStreamer(id){if(!confirm('削除しますか？'))return;data.streamers=data.streamers.filter(s=>s.id!==id);data.schedules=data.schedules.filter(s=>s.streamerId!==id);data.dayoffs=data.dayoffs.filter(o=>o.streamerId!==id);saveData();renderSettings();renderCalendar();}
+document.getElementById('addStreamer').onclick=()=>{const n=document.getElementById('newStreamerName').value.trim(),c=document.getElementById('newStreamerColor').value;if(!n){alert('名前を入力してください');return;}if(data.streamers.length>=5){alert('最大5名まで');return;}data.streamers.push({id:uid(),name:n,color:c});saveData();document.getElementById('newStreamerName').value='';renderSettings();renderCalendar();};
+document.getElementById('exportData').onclick=()=>{const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='liver_schedule_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(u);};
+document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
+document.getElementById('importFile').addEventListener('change',(e)=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=(ev)=>{try{const i=JSON.parse(ev.target.result);if(i.streamers&&i.schedules&&i.dayoffs){data=i;saveData();renderCalendar();renderRegister();renderDayoff();renderStats();renderSettings();alert('インポートしました');}else alert('形式が正しくありません');}catch(err){alert('読み込み失敗: '+err.message);}};r.readAsText(f);});
+document.getElementById('resetData').onclick=()=>{if(!confirm('全データを削除します。よろしいですか？'))return;localStorage.removeItem(STORAGE_KEY);data=loadData();renderCalendar();renderRegister();renderDayoff();renderStats();renderSettings();};
+let quickAddDate=null;
+function openQuickAdd(ds){quickAddDate=ds;const[y,mo,d]=ds.split('-');document.getElementById('modalDateLabel').textContent=y+'年'+parseInt(mo)+'月'+parseInt(d)+'日';document.getElementById('m-streamer').innerHTML=data.streamers.map(s=>'<option value="'+s.id+'">'+escapeHtml(s.name)+'</option>').join('');document.getElementById('m-product').innerHTML='<option value="">(指定なし)</option>'+data.products.map(p=>'<option value="'+p.id+'">'+escapeHtml(p.name)+'</option>').join('');document.getElementById('m-title').value='';document.getElementById('m-start').value='20:00';document.getElementById('m-end').value='22:00';document.getElementById('quickAddModal').classList.add('open');document.getElementById('m-start').focus();}
+document.getElementById('modalCancel').onclick=()=>document.getElementById('quickAddModal').classList.remove('open');
+document.getElementById('quickAddModal').addEventListener('click',(e)=>{if(e.target===document.getElementById('quickAddModal'))document.getElementById('quickAddModal').classList.remove('open');});
+document.getElementById('modalSave').onclick=()=>{const sid=document.getElementById('m-streamer').value,pid=document.getElementById('m-product').value,start=document.getElementById('m-start').value,end=document.getElementById('m-end').value,title=document.getElementById('m-title').value.trim();if(!start||!end){alert('時刻を入力してください');return;}data.schedules.push({id:uid(),streamerId:sid,productId:pid,date:quickAddDate,start,end,title});saveData();renderCalendar();document.getElementById('quickAddModal').classList.remove('open');};
+document.getElementById('r-date').valueAsDate=new Date();document.getElementById('d-date').valueAsDate=new Date();
+fillStreamerSelects();renderCalendar();initCloudSync();
 </script>
 </body>
 </html>
