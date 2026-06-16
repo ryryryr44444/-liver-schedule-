@@ -507,16 +507,26 @@ async function initCloudSync(){
 
 function saveLocalOnly(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
+function toArray(val){
+  if(!val) return [];
+  if(Array.isArray(val)) return val;
+  return Object.values(val);
+}
+
 async function fetchRemote(){
   try{
     const res = await fetch(FIREBASE_URL);
     if(!res.ok) return null;
     const json = await res.json();
-    if(!json || !json.schedules || !json.streamers) return null;
+    if(!json || !json.streamers) return null;
+    json.schedules = toArray(json.schedules);
+    json.streamers = toArray(json.streamers);
+    json.dayoffs = toArray(json.dayoffs);
     if(!json.products) json.products = [
       {id:'p1',name:'ナノブルシェイキングボトル'},
       {id:'p2',name:'エンジェルルカ（韓国化粧品）'}
     ];
+    json.products = toArray(json.products);
     return json;
   }catch(e){ return null; }
 }
