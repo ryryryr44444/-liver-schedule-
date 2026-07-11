@@ -392,41 +392,50 @@
 
 </main>
 
-<!-- Quick-add modal -->
-<div class="modal-overlay" id="quickAddModal">
-  <div class="modal">
-    <h3>📝 配信予定を追加 — <span id="modalDateLabel"></span></h3>
-    <div class="row">
-      <div class="field" style="flex:1;">
-        <label>ライバー</label>
-        <select id="m-streamer" style="width:100%;"></select>
-      </div>
+<!-- Day detail / quick-add modal -->
+<div class="modal-overlay" id="dayModal">
+  <div class="modal" style="width:min(560px,95vw);max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;">📅 <span id="dayModalTitle"></span></h3>
+      <button class="btn secondary" id="dayModalClose" style="height:30px;padding:4px 12px;font-size:0.85em;">✕</button>
     </div>
-    <div class="row">
-      <div class="field" style="flex:1;">
-        <label>商品</label>
-        <select id="m-product" style="width:100%;"></select>
+
+    <!-- Existing events for the day -->
+    <div id="dayEventsList" style="margin-bottom:12px;"></div>
+
+    <!-- Add new schedule -->
+    <div style="border-top:1px solid var(--border);padding-top:14px;">
+      <p style="font-weight:bold;margin:0 0 10px;color:var(--primary);">＋ 配信を追加</p>
+      <div class="row" style="margin-bottom:10px;">
+        <div class="field" style="flex:1;">
+          <label>ライバー</label>
+          <select id="m-streamer" style="width:100%;"></select>
+        </div>
+        <div class="field" style="flex:1;">
+          <label>商品</label>
+          <select id="m-product" style="width:100%;"></select>
+        </div>
       </div>
-    </div>
-    <div class="row" style="display:flex;gap:10px;">
-      <div class="field" style="flex:1;">
-        <label>開始時刻</label>
-        <input type="time" id="m-start" value="20:00" style="width:100%;">
+      <div class="row" style="margin-bottom:10px;">
+        <div class="field" style="flex:1;">
+          <label>開始時刻</label>
+          <input type="time" id="m-start" value="20:00" style="width:100%;">
+        </div>
+        <div class="field" style="flex:1;">
+          <label>終了時刻</label>
+          <input type="time" id="m-end" value="22:00" style="width:100%;">
+        </div>
       </div>
-      <div class="field" style="flex:1;">
-        <label>終了時刻</label>
-        <input type="time" id="m-end" value="22:00" style="width:100%;">
+      <div class="row" style="margin-bottom:10px;">
+        <div class="field" style="flex:1;">
+          <label>タイトル/メモ</label>
+          <input type="text" id="m-title" placeholder="例：雑談配信" style="width:100%;">
+        </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="field" style="flex:1;">
-        <label>タイトル/メモ</label>
-        <input type="text" id="m-title" placeholder="例：雑談配信" style="width:100%;">
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn secondary" id="dayModalClose2">キャンセル</button>
+        <button class="btn" id="dayModalSave">追加する</button>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn secondary" id="modalCancel">キャンセル</button>
-      <button class="btn" id="modalSave">追加</button>
     </div>
   </div>
 </div>
@@ -624,7 +633,7 @@ function renderCalendar(){
   for(let d=1; d<=daysInMonth; d++){
     const dateStr = formatDate(calYear, calMonth, d);
     const isToday = (calYear===today.getFullYear() && calMonth===today.getMonth() && d===today.getDate());
-    let cell = '<div class="cal-cell ' + (isToday?'today':'') + '" onclick="openQuickAdd(\'' + dateStr + '\')"><div class="date-num">' + d + '</div>';
+    let cell = '<div class="cal-cell ' + (isToday?'today':'') + '" onclick="openDayModal(\'' + dateStr + '\')"><div class="date-num">' + d + '</div>';
 
     const allEvents = [];
     const daySchedules = data.schedules.filter(s=>s.date===dateStr);
@@ -940,31 +949,74 @@ document.getElementById('resetData').onclick = ()=>{
   renderCalendar(); renderRegister(); renderDayoff(); renderStats(); renderSettings();
 };
 
-// ---------- Quick-add modal ----------
+// ---------- Day detail / quick-add modal ----------
 let quickAddDate = null;
 
-function openQuickAdd(dateStr){
+function openDayModal(dateStr){
   quickAddDate = dateStr;
   const parts = dateStr.split('-');
-  document.getElementById('modalDateLabel').textContent = parts[0] + '年' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日';
+  document.getElementById('dayModalTitle').textContent = parts[0] + '年' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日';
+
+  // Build existing events list
+  const daySchedules = data.schedules.filter(s=>s.date===dateStr).sort((a,b)=>a.start.localeCompare(b.start));
+  const dayOffs = data.dayoffs.filter(o=>o.date===dateStr);
+  let eventsHtml = '';
+  if(daySchedules.length===0 && dayOffs.length===0){
+    eventsHtml = '<p class="small-muted" style="text-align:center;padding:6px 0;">この日の予定はまだありません</p>';
+  } else {
+    daySchedules.forEach(s=>{
+      const streamer = data.streamers.find(st=>st.id===s.streamerId);
+      const product = data.products.find(p=>p.id===s.productId);
+      const color = streamer ? streamer.color : '#999';
+      const name = streamer ? streamer.name : '?';
+      eventsHtml += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f4f3ff;border-radius:8px;margin-bottom:6px;">' +
+        '<span style="width:12px;height:12px;border-radius:3px;background:' + color + ';flex-shrink:0;display:inline-block;"></span>' +
+        '<div style="flex:1;line-height:1.6;">' +
+          '<strong>' + escapeHtml(name) + '</strong>' +
+          ' <span style="color:var(--muted);">' + s.start + ' 〜 ' + s.end + '</span>' +
+          (product ? ' <span style="font-size:0.78em;background:#e0dcff;color:#4a3ab5;padding:1px 6px;border-radius:4px;margin-left:4px;">' + escapeHtml(product.name) + '</span>' : '') +
+          (s.title ? '<br><span style="font-size:0.82em;color:var(--muted);">' + escapeHtml(s.title) + '</span>' : '') +
+        '</div>' +
+        '<button class="btn danger" onclick="deleteScheduleFromModal(\'' + s.id + '\',\'' + dateStr + '\')" style="flex-shrink:0;font-size:0.78em;padding:3px 8px;height:auto;">削除</button>' +
+        '</div>';
+    });
+    dayOffs.forEach(o=>{
+      const streamer = data.streamers.find(st=>st.id===o.streamerId);
+      const name = streamer ? streamer.name : '?';
+      const statusLabel = {pending:'申請中', approved:'承認済', rejected:'却下'}[o.status];
+      eventsHtml += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fffde7;border-radius:8px;margin-bottom:6px;">' +
+        '<span style="font-size:1em;flex-shrink:0;">🏖️</span>' +
+        '<div style="flex:1;"><strong>' + escapeHtml(name) + '</strong> 休み希望 <span class="tag ' + o.status + '">' + statusLabel + '</span></div>' +
+        '</div>';
+    });
+  }
+  document.getElementById('dayEventsList').innerHTML = eventsHtml;
+
+  // Reset form
   document.getElementById('m-streamer').innerHTML = data.streamers.map(s=>'<option value="' + s.id + '">' + escapeHtml(s.name) + '</option>').join('');
   document.getElementById('m-product').innerHTML = '<option value="">(指定なし)</option>' + data.products.map(p=>'<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>').join('');
   document.getElementById('m-title').value = '';
   document.getElementById('m-start').value = '20:00';
   document.getElementById('m-end').value = '22:00';
-  document.getElementById('quickAddModal').classList.add('open');
-  document.getElementById('m-start').focus();
+
+  document.getElementById('dayModal').classList.add('open');
 }
 
-document.getElementById('modalCancel').onclick = ()=>{
-  document.getElementById('quickAddModal').classList.remove('open');
-};
-document.getElementById('quickAddModal').addEventListener('click', (e)=>{
-  if(e.target === document.getElementById('quickAddModal')){
-    document.getElementById('quickAddModal').classList.remove('open');
-  }
+function deleteScheduleFromModal(id, dateStr){
+  if(!confirm('この配信予定を削除しますか？')) return;
+  data.schedules = data.schedules.filter(s=>s.id!==id);
+  saveData();
+  renderCalendar();
+  openDayModal(dateStr);
+}
+
+function closeDayModal(){ document.getElementById('dayModal').classList.remove('open'); }
+document.getElementById('dayModalClose').onclick = closeDayModal;
+document.getElementById('dayModalClose2').onclick = closeDayModal;
+document.getElementById('dayModal').addEventListener('click', (e)=>{
+  if(e.target === document.getElementById('dayModal')) closeDayModal();
 });
-document.getElementById('modalSave').onclick = ()=>{
+document.getElementById('dayModalSave').onclick = ()=>{
   const streamerId = document.getElementById('m-streamer').value;
   const productId = document.getElementById('m-product').value;
   const start = document.getElementById('m-start').value;
@@ -974,7 +1026,7 @@ document.getElementById('modalSave').onclick = ()=>{
   data.schedules.push({id: uid(), streamerId, productId, date: quickAddDate, start, end, title});
   saveData();
   renderCalendar();
-  document.getElementById('quickAddModal').classList.remove('open');
+  openDayModal(quickAddDate); // refresh modal to show new event
 };
 
 // ---------- init ----------
