@@ -113,6 +113,7 @@
     <button data-view="calendar" class="active">カレンダー</button>
     <button data-view="register">配信登録</button>
     <button data-view="dayoff">休み希望</button>
+    <button data-view="feedback">フィードバック</button>
     <button data-view="stats">集計</button>
     <button data-view="settings">設定</button>
   </nav>
@@ -213,6 +214,62 @@
         <tbody id="dayoffTable"></tbody>
       </table>
       <p class="small-muted">※同じ日に配信予定が登録されている場合、カレンダー上で重複が確認できます。承認すると配信不可日としてカレンダーに表示されます。</p>
+    </div>
+  </section>
+
+  <!-- フィードバック -->
+  <section id="view-feedback" class="hidden">
+    <div class="card">
+      <h2>フィードバックを記録</h2>
+      <div class="row">
+        <div class="field">
+          <label>ライバー</label>
+          <select id="fb-streamer"></select>
+        </div>
+        <div class="field">
+          <label>日付</label>
+          <input type="date" id="fb-date">
+        </div>
+        <div class="field">
+          <label>カテゴリ</label>
+          <select id="fb-category">
+            <option value="improvement">改善点</option>
+            <option value="caution">注意点</option>
+            <option value="praise">良かった点</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <div class="field" style="flex:1;">
+          <label>内容</label>
+          <textarea id="fb-content" placeholder="配信中の改善点や注意事項などを記入してください" style="height:80px;resize:vertical;width:100%;"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+        <button class="btn" id="addFeedback">記録する</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>フィードバック一覧</h2>
+      <div class="row" style="margin-bottom:14px;">
+        <div class="field">
+          <label>絞り込み（ライバー）</label>
+          <select id="fb-filter-streamer"><option value="">全員</option></select>
+        </div>
+        <div class="field">
+          <label>絞り込み（カテゴリ）</label>
+          <select id="fb-filter-category">
+            <option value="">すべて</option>
+            <option value="improvement">改善点</option>
+            <option value="caution">注意点</option>
+            <option value="praise">良かった点</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+      </div>
+      <div id="feedbackList"></div>
     </div>
   </section>
 
@@ -366,6 +423,7 @@ function sanitizeData(d){
   d.streamers = toArray(d.streamers);
   d.dayoffs = toArray(d.dayoffs);
   d.products = toArray(d.products);
+  d.feedbacks = toArray(d.feedbacks);
   if(!d.products.length) d.products = [
     {id: 'p1', name: 'ナノブルシェイキングボトル'},
     {id: 'p2', name: 'エンジェルルカ（韓国化粧品）'}
@@ -391,7 +449,8 @@ function loadData(){
       {id: 'p2', name: 'エンジェルルカ（韓国化粧品）'}
     ],
     schedules: [],
-    dayoffs: []
+    dayoffs: [],
+    feedbacks: []
   };
 }
 function saveData(){
@@ -470,6 +529,7 @@ function refreshAllViews(){
   renderCalendar();
   if(!document.getElementById('view-register').classList.contains('hidden')) renderRegister();
   if(!document.getElementById('view-dayoff').classList.contains('hidden')) renderDayoff();
+  if(!document.getElementById('view-feedback').classList.contains('hidden')) renderFeedback();
   if(!document.getElementById('view-stats').classList.contains('hidden')) renderStats();
   if(!document.getElementById('view-settings').classList.contains('hidden')) renderSettings();
 }
@@ -490,7 +550,7 @@ document.getElementById('syncNow').addEventListener('click', async ()=>{
 });
 
 // ---------- Navigation ----------
-const views = ['calendar','register','dayoff','stats','settings'];
+const views = ['calendar','register','dayoff','feedback','stats','settings'];
 document.querySelectorAll('nav button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
@@ -499,6 +559,7 @@ document.querySelectorAll('nav button').forEach(btn=>{
     document.getElementById('view-'+btn.dataset.view).classList.remove('hidden');
     if(btn.dataset.view==='register') renderRegister();
     if(btn.dataset.view==='dayoff') renderDayoff();
+    if(btn.dataset.view==='feedback') renderFeedback();
     if(btn.dataset.view==='stats') renderStats();
     if(btn.dataset.view==='settings') renderSettings();
     if(btn.dataset.view==='calendar') renderCalendar();
@@ -697,6 +758,76 @@ function deleteDayoff(id){
   saveData();
   renderDayoff();
   renderCalendar();
+}
+
+// ---------- Feedback ----------
+const FB_CATEGORY_LABEL = {improvement:'改善点', caution:'注意点', praise:'良かった点', other:'その他'};
+const FB_CATEGORY_STYLE = {
+  improvement: 'background:#fee2e2;color:#dc2626;',
+  caution:     'background:#fef3c7;color:#92400e;',
+  praise:      'background:#d1fae5;color:#065f46;',
+  other:       'background:#e0e7ff;color:#3730a3;'
+};
+
+document.getElementById('addFeedback').onclick = ()=>{
+  const streamerId = document.getElementById('fb-streamer').value;
+  const date = document.getElementById('fb-date').value;
+  const category = document.getElementById('fb-category').value;
+  const content = document.getElementById('fb-content').value.trim();
+  if(!date){ alert('日付を入力してください'); return; }
+  if(!content){ alert('内容を入力してください'); return; }
+  if(!data.feedbacks) data.feedbacks = [];
+  data.feedbacks.push({id: uid(), streamerId, date, category, content});
+  saveData();
+  document.getElementById('fb-content').value = '';
+  renderFeedback();
+};
+
+document.getElementById('fb-filter-streamer').addEventListener('change', renderFeedback);
+document.getElementById('fb-filter-category').addEventListener('change', renderFeedback);
+
+function renderFeedback(){
+  const streamerOpts = data.streamers.map(s=>'<option value="' + s.id + '">' + escapeHtml(s.name) + '</option>').join('');
+  document.getElementById('fb-streamer').innerHTML = streamerOpts;
+  document.getElementById('fb-filter-streamer').innerHTML = '<option value="">全員</option>' + streamerOpts;
+
+  const filterS = document.getElementById('fb-filter-streamer').value;
+  const filterC = document.getElementById('fb-filter-category').value;
+  let list = [...(data.feedbacks||[])].sort((a,b)=>b.date.localeCompare(a.date));
+  if(filterS) list = list.filter(f=>f.streamerId===filterS);
+  if(filterC) list = list.filter(f=>f.category===filterC);
+
+  const container = document.getElementById('feedbackList');
+  if(!list.length){
+    container.innerHTML = '<p class="small-muted" style="text-align:center;padding:16px 0;">フィードバックはまだありません</p>';
+    return;
+  }
+  container.innerHTML = list.map(f=>{
+    const streamer = data.streamers.find(s=>s.id===f.streamerId);
+    const color = streamer ? streamer.color : '#999';
+    const name = streamer ? streamer.name : '?';
+    const catStyle = FB_CATEGORY_STYLE[f.category] || FB_CATEGORY_STYLE.other;
+    const catLabel = FB_CATEGORY_LABEL[f.category] || 'その他';
+    return '<div style="display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);align-items:flex-start;">' +
+      '<div style="width:4px;border-radius:4px;background:' + color + ';flex-shrink:0;align-self:stretch;"></div>' +
+      '<div style="flex:1;">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">' +
+          '<strong style="font-size:0.9em;">' + escapeHtml(name) + '</strong>' +
+          '<span style="font-size:0.75em;padding:2px 8px;border-radius:20px;font-weight:500;' + catStyle + '">' + catLabel + '</span>' +
+          '<span style="font-size:0.8em;color:var(--muted);">' + f.date + '</span>' +
+        '</div>' +
+        '<p style="font-size:0.9em;color:var(--text);line-height:1.6;white-space:pre-wrap;margin:0;">' + escapeHtml(f.content) + '</p>' +
+      '</div>' +
+      '<button class="btn danger" onclick="deleteFeedback(\'' + f.id + '\')" style="flex-shrink:0;margin-top:2px;">削除</button>' +
+    '</div>';
+  }).join('');
+}
+
+function deleteFeedback(id){
+  if(!confirm('このフィードバックを削除しますか？')) return;
+  data.feedbacks = (data.feedbacks||[]).filter(f=>f.id!==id);
+  saveData();
+  renderFeedback();
 }
 
 // ---------- Stats ----------
@@ -942,6 +1073,7 @@ document.getElementById('dayModalSave').onclick = ()=>{
 // ---------- init ----------
 document.getElementById('r-date').valueAsDate = new Date();
 document.getElementById('d-date').valueAsDate = new Date();
+document.getElementById('fb-date').valueAsDate = new Date();
 fillStreamerSelects();
 renderCalendar();
 initCloudSync();
