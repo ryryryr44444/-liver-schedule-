@@ -307,7 +307,7 @@
       <h2>ライバー設定</h2>
       <p class="small-muted">名前とカラーを編集できます（最大5名まで追加可能）。</p>
       <table>
-        <thead><tr><th>名前</th><th>カラー</th><th>操作</th></tr></thead>
+        <thead><tr><th>名前</th><th>カラー</th><th>ショップURL</th><th>操作</th></tr></thead>
         <tbody id="streamerTable"></tbody>
       </table>
       <div class="row" style="margin-top:10px;">
@@ -586,7 +586,11 @@ function renderCalendar(){
 
   const legend = document.getElementById('legend');
   legend.innerHTML = data.streamers.map(s=>
-    '<span><span class="dot" style="background:' + s.color + '"></span>' + escapeHtml(s.name) + '</span>'
+    '<span style="display:inline-flex;align-items:center;gap:5px;">' +
+    '<span class="dot" style="background:' + s.color + '"></span>' +
+    escapeHtml(s.name) +
+    (s.shopUrl ? ' <a href="' + escapeHtml(s.shopUrl) + '" target="_blank" rel="noopener" style="font-size:0.78em;background:#e0e7ff;color:#3730a3;padding:1px 7px;border-radius:10px;text-decoration:none;font-weight:500;">🛒 ショップ</a>' : '') +
+    '</span>'
   ).join('') + '<span><span class="dot" style="background:var(--off)"></span>休み希望(承認済)</span>';
 
   const head = document.getElementById('calGridHead');
@@ -715,7 +719,6 @@ function calcHours(start, end){
   if(mins < 0) mins += 24*60;
   return mins/60;
 }
-
 // ---------- Day-off requests ----------
 document.getElementById('addDayoff').onclick = ()=>{
   const streamerId = document.getElementById('d-streamer').value;
@@ -891,6 +894,7 @@ function renderSettings(){
     '<tr>' +
     '<td><input type="text" value="' + escapeHtml(s.name) + '" onchange="updateStreamerName(\'' + s.id + '\', this.value)"></td>' +
     '<td><input type="color" value="' + s.color + '" onchange="updateStreamerColor(\'' + s.id + '\', this.value)"></td>' +
+    '<td><input type="url" value="' + escapeHtml(s.shopUrl||'') + '" placeholder="https://..." style="width:220px;" onchange="updateStreamerShopUrl(\'' + s.id + '\', this.value)"></td>' +
     '<td><button class="btn danger" onclick="deleteStreamer(\'' + s.id + '\')">削除</button></td>' +
     '</tr>'
   ).join('');
@@ -929,6 +933,10 @@ function updateStreamerName(id, name){
 function updateStreamerColor(id, color){
   const s = data.streamers.find(x=>x.id===id);
   if(s){ s.color = color; saveData(); renderCalendar(); }
+}
+function updateStreamerShopUrl(id, url){
+  const s = data.streamers.find(x=>x.id===id);
+  if(s){ s.shopUrl = url.trim(); saveData(); renderCalendar(); }
 }
 function deleteStreamer(id){
   if(!confirm('このライバーを削除しますか？関連する配信予定・休み希望も削除されます。')) return;
